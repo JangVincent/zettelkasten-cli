@@ -62,6 +62,16 @@ chmod +x zettel-*
 sudo mv zettel-* /usr/local/bin/zettel
 ```
 
+### 삭제
+
+```bash
+# 바이너리 삭제
+sudo rm /usr/local/bin/zettel
+
+# 데이터 삭제 (선택)
+rm -rf ~/.zettel
+```
+
 ## 빠른 시작
 
 ```bash
@@ -115,6 +125,22 @@ zettel promote fl:250129:1
 - 경로: `~/.zettel/zettel.db` (SQLite)
 - Full-Text Search 지원 (FTS5)
 - 모든 변경사항 히스토리 기록
+
+## 내보내기
+
+```bash
+zettel export                     # 기본 경로
+zettel export -o ~/backup/zettel  # 커스텀 경로
+```
+
+기본 내보내기 경로: `~/Documents/zettel/{yymmdd_HHmmss}/`
+
+```
+~/Documents/zettel/250129_143042/
+├── fleeting/
+├── literature/
+└── zettel/
+```
 
 ## 알려진 제한사항
 

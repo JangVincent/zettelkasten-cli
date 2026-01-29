@@ -62,6 +62,16 @@ chmod +x zettel-*
 sudo mv zettel-* /usr/local/bin/zettel
 ```
 
+### Uninstall
+
+```bash
+# Remove binary
+sudo rm /usr/local/bin/zettel
+
+# Remove data (optional)
+rm -rf ~/.zettel
+```
+
 ## Quick Start
 
 ```bash
@@ -115,6 +125,22 @@ All commands run in **interactive mode** when executed without arguments.
 - Path: `~/.zettel/zettel.db` (SQLite)
 - Full-Text Search support (FTS5)
 - All changes recorded in history
+
+## Export
+
+```bash
+zettel export                     # Default path
+zettel export -o ~/backup/zettel  # Custom path
+```
+
+Default export path: `~/Documents/zettel/{yymmdd_HHmmss}/`
+
+```
+~/Documents/zettel/250129_143042/
+├── fleeting/
+├── literature/
+└── zettel/
+```
 
 ## Known Limitations
 
