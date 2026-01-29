@@ -129,4 +129,21 @@ export class LinkRepositoryImpl implements LinkRepository {
       .get(sourceId, targetId)
     return !!row
   }
+
+  findAll(): Link[] {
+    const db = getDb()
+    const rows = db
+      .prepare(
+        `
+      SELECT * FROM links
+    `,
+      )
+      .all() as { source_id: string; target_id: string | null; reason: string }[]
+
+    return rows.map((row) => ({
+      sourceId: row.source_id,
+      targetId: row.target_id,
+      reason: row.reason,
+    }))
+  }
 }
