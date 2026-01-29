@@ -1,17 +1,17 @@
 import { Database } from 'bun:sqlite'
 import { existsSync, mkdirSync } from 'fs'
-import { homedir, platform } from 'os'
+import { homedir } from 'os'
 import { join } from 'path'
-
-// Linux에서 Bun canary 버전의 SQLite 라이브러리 경로 문제 해결
-if (platform() === 'linux' && existsSync('/usr/lib/libsqlite3.so')) {
-  Database.setCustomSQLite('/usr/lib/libsqlite3.so')
-}
 
 const DEFAULT_PATH = join(homedir(), '.zettel')
 const DB_FILE = 'zettel.db'
 
 let db: Database | null = null
+
+// 테스트용: 외부에서 DB 인스턴스를 설정할 수 있도록 함
+export function setDb(database: Database | null): void {
+  db = database
+}
 
 export function getDbPath(customPath?: string): string {
   return customPath || DEFAULT_PATH
