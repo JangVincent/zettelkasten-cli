@@ -116,6 +116,10 @@ All commands run in **interactive mode** when executed without arguments.
 - Full-Text Search support (FTS5)
 - All changes recorded in history
 
+## Known Limitations
+
+**Unicode Display**: ZWJ (Zero Width Joiner) emoji sequences like 👨‍👩‍👧‍👦 may not align correctly in terminal boxes. Display width varies by terminal emulator. Standard emoji (🎉), CJK characters (한글/中文/日本語), and Arabic/Hebrew text are supported.
+
 ## Tech Stack
 
 - **Runtime**: [Bun](https://bun.sh)

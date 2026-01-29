@@ -6,6 +6,9 @@ out
 dist
 *.tgz
 
+# compiled binaries
+bin
+
 # code coverage
 coverage
 *.lcov
