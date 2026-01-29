@@ -26,14 +26,14 @@ const MIME_TYPES: Record<string, string> = {
 export function createServer(port: number, serveStatic = true) {
   // Try multiple paths for static files:
   // 1. Environment variable override
-  // 2. XDG data directory (curl install)
+  // 2. ZETTEL_HOME directory (curl install)
   // 3. Relative to executable (local build)
   // 4. Relative to source (development)
   const homeDir = process.env.HOME || ''
-  const xdgDataDir = process.env.XDG_DATA_HOME || resolve(homeDir, '.local/share')
+  const zettelHome = process.env.ZETTEL_HOME || resolve(homeDir, '.zettel')
   const possibleDistPaths = [
     process.env.ZETTEL_WEB_DIST,
-    resolve(xdgDataDir, 'zettel/web-dist'),
+    resolve(zettelHome, 'web-dist'),
     resolve(process.execPath, '../web-dist'),
     resolve(import.meta.dir, '../client/dist'),
   ].filter(Boolean) as string[]

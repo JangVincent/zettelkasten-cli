@@ -2,8 +2,9 @@
 set -e
 
 REPO="JangVincent/zettelkasten-cli"
-INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/bin}"
-DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/zettel"
+ZETTEL_HOME="${ZETTEL_HOME:-$HOME/.zettel}"
+INSTALL_DIR="$ZETTEL_HOME/bin"
+DATA_DIR="$ZETTEL_HOME"
 BINARY_NAME="zettel"
 
 echo "Installing zettel..."

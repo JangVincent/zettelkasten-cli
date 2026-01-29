@@ -8,10 +8,7 @@ interface SelfDeleteOptions {
 
 export async function selfDeleteCommand(options: SelfDeleteOptions): Promise<void> {
   const homeDir = process.env.HOME || ''
-  const xdgDataDir = process.env.XDG_DATA_HOME || resolve(homeDir, '.local/share')
-  const binPath = resolve(homeDir, '.local/bin/zettel')
-  const webDistPath = resolve(xdgDataDir, 'zettel/web-dist')
-  const dataDir = resolve(xdgDataDir, 'zettel')
+  const zettelHome = process.env.ZETTEL_HOME || resolve(homeDir, '.zettel')
 
   if (!options.force) {
     const confirm = await p.confirm({
@@ -26,29 +23,14 @@ export async function selfDeleteCommand(options: SelfDeleteOptions): Promise<voi
 
   p.log.step('Removing zettel...')
 
-  // Remove web-dist
+  // Remove entire zettel home directory
   try {
-    rmSync(webDistPath, { recursive: true, force: true })
-    p.log.success(`Removed ${webDistPath}`)
+    rmSync(zettelHome, { recursive: true, force: true })
+    p.log.success(`Removed ${zettelHome}`)
   } catch {
-    p.log.warn(`Could not remove ${webDistPath}`)
-  }
-
-  // Remove data dir if empty
-  try {
-    rmSync(dataDir, { recursive: false })
-    p.log.success(`Removed ${dataDir}`)
-  } catch {
-    // Directory not empty or doesn't exist, ignore
-  }
-
-  // Remove binary
-  try {
-    rmSync(binPath, { force: true })
-    p.log.success(`Removed ${binPath}`)
-  } catch {
-    p.log.warn(`Could not remove ${binPath}`)
+    p.log.warn(`Could not remove ${zettelHome}`)
   }
 
   p.log.success('zettel has been uninstalled')
+  p.log.info('Remove PATH entry from your shell profile if added')
 }

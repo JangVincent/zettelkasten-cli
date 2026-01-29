@@ -58,17 +58,19 @@ curl -fsSL https://zettel.vincentjang.dev | bash
 [Releases](https://github.com/JangVincent/zettelkasten-cli/releases)에서 바이너리 다운로드 후:
 
 ```bash
+mkdir -p ~/.zettel/bin
 chmod +x zettel-*
-sudo mv zettel-* /usr/local/bin/zettel
+mv zettel-* ~/.zettel/bin/zettel
+
+# PATH에 추가 (~/.bashrc 또는 ~/.zshrc에 추가)
+export PATH="$PATH:$HOME/.zettel/bin"
 ```
 
 ### 삭제
 
 ```bash
-# 바이너리 삭제
-sudo rm /usr/local/bin/zettel
-
-# 데이터 삭제 (선택)
+zettel self-delete
+# 또는 수동으로:
 rm -rf ~/.zettel
 ```
 
@@ -144,9 +146,18 @@ zettel web -p 8080      # 커스텀 포트 지정
 
 ## 데이터 저장
 
-- 경로: `~/.zettel/zettel.db` (SQLite)
+모든 데이터는 `~/.zettel/`에 저장됩니다:
+
+```
+~/.zettel/
+├── bin/zettel      # 바이너리
+├── web-dist/       # 웹 UI 정적 파일
+└── zettel.db       # SQLite 데이터베이스
+```
+
 - Full-Text Search 지원 (FTS5)
 - 모든 변경사항 히스토리 기록
+- `ZETTEL_HOME` 환경변수로 경로 변경 가능
 
 ## 내보내기
 

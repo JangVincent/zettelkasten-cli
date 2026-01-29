@@ -3,7 +3,7 @@ import { existsSync, mkdirSync } from 'fs'
 import { homedir } from 'os'
 import { join } from 'path'
 
-const DEFAULT_PATH = join(homedir(), '.zettel')
+const DEFAULT_PATH = process.env.ZETTEL_HOME || join(homedir(), '.zettel')
 const DB_FILE = 'zettel.db'
 
 let db: Database | null = null

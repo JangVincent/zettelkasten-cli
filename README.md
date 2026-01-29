@@ -58,17 +58,19 @@ curl -fsSL https://zettel.vincentjang.dev | bash
 Download binary from [Releases](https://github.com/JangVincent/zettelkasten-cli/releases), then:
 
 ```bash
+mkdir -p ~/.zettel/bin
 chmod +x zettel-*
-sudo mv zettel-* /usr/local/bin/zettel
+mv zettel-* ~/.zettel/bin/zettel
+
+# Add to PATH (add to ~/.bashrc or ~/.zshrc)
+export PATH="$PATH:$HOME/.zettel/bin"
 ```
 
 ### Uninstall
 
 ```bash
-# Remove binary
-sudo rm /usr/local/bin/zettel
-
-# Remove data (optional)
+zettel self-delete
+# or manually:
 rm -rf ~/.zettel
 ```
 
@@ -144,9 +146,18 @@ Then open `http://localhost:3001` in your browser.
 
 ## Data Storage
 
-- Path: `~/.zettel/zettel.db` (SQLite)
+All data is stored in `~/.zettel/`:
+
+```
+~/.zettel/
+├── bin/zettel      # Binary
+├── web-dist/       # Web UI assets
+└── zettel.db       # SQLite database
+```
+
 - Full-Text Search support (FTS5)
 - All changes recorded in history
+- Customize location with `ZETTEL_HOME` environment variable
 
 ## Export
 
