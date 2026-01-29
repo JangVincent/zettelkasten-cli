@@ -16,9 +16,11 @@ import {
   newCommand,
   promoteCommand,
   searchCommand,
+  selfDeleteCommand,
   showCommand,
   treeCommand,
   unlinkCommand,
+  webCommand,
 } from './commands'
 import type { Language } from './domain/repositories'
 import { setLanguage, t } from './i18n'
@@ -258,6 +260,28 @@ program
       })
     })(),
   )
+
+// web 명령어
+program
+  .command('web')
+  .description('Start web UI')
+  .option('-p, --port <number>', 'Port number', parseInt)
+  .action((options) =>
+    requiresInit(async () => {
+      await webCommand({
+        port: options.port,
+      })
+    })(),
+  )
+
+// self-delete 명령어 (초기화 불필요)
+program
+  .command('self-delete')
+  .description('Uninstall zettel CLI')
+  .option('-f, --force', 'Skip confirmation')
+  .action(async (options) => {
+    await selfDeleteCommand({ force: options.force })
+  })
 
 // CLI 실행
 program.parse()

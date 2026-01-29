@@ -2,7 +2,8 @@
 set -e
 
 REPO="JangVincent/zettelkasten-cli"
-INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
+INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/bin}"
+DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/zettel"
 BINARY_NAME="zettel"
 
 echo "Installing zettel..."
@@ -28,25 +29,44 @@ case "$ARCH" in
     ;;
 esac
 
-DOWNLOAD_URL="https://github.com/${REPO}/releases/latest/download/${BINARY_NAME}-${OS}-${ARCH}"
+DOWNLOAD_URL="https://github.com/${REPO}/releases/latest/download/${BINARY_NAME}-${OS}-${ARCH}.tar.gz"
 
-TMPFILE=$(mktemp)
-trap "rm -f $TMPFILE" EXIT
+TMPDIR=$(mktemp -d)
+trap "rm -rf $TMPDIR" EXIT
 
-echo "Downloading ${BINARY_NAME}-${OS}-${ARCH}..."
-if ! curl -fsSL "$DOWNLOAD_URL" -o "$TMPFILE"; then
+echo "Downloading ${BINARY_NAME}-${OS}-${ARCH}.tar.gz..."
+if ! curl -fsSL "$DOWNLOAD_URL" -o "$TMPDIR/zettel.tar.gz"; then
   echo "Failed to download from $DOWNLOAD_URL"
   exit 1
 fi
 
-chmod +x "$TMPFILE"
+echo "Extracting..."
+tar -xzf "$TMPDIR/zettel.tar.gz" -C "$TMPDIR"
 
-if [ -w "$INSTALL_DIR" ]; then
-  mv "$TMPFILE" "${INSTALL_DIR}/${BINARY_NAME}"
-else
-  echo "Need sudo to install to ${INSTALL_DIR}"
-  sudo mv "$TMPFILE" "${INSTALL_DIR}/${BINARY_NAME}"
+# Create directories
+mkdir -p "$INSTALL_DIR"
+mkdir -p "$DATA_DIR"
+
+# Install binary
+mv "$TMPDIR/zettel" "$INSTALL_DIR/"
+chmod +x "$INSTALL_DIR/zettel"
+
+# Install web assets
+if [ -d "$TMPDIR/web-dist" ]; then
+  rm -rf "$DATA_DIR/web-dist"
+  mv "$TMPDIR/web-dist" "$DATA_DIR/"
+  echo "Web UI installed to $DATA_DIR/web-dist"
 fi
 
-echo "zettel installed to ${INSTALL_DIR}/${BINARY_NAME}"
+echo ""
+echo "zettel installed to $INSTALL_DIR/zettel"
+echo ""
+
+# Check if INSTALL_DIR is in PATH
+if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
+  echo "Add this to your shell profile:"
+  echo "  export PATH=\"\$PATH:$INSTALL_DIR\""
+  echo ""
+fi
+
 echo "Run 'zettel --help' to get started"

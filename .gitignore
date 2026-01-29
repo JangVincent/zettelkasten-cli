@@ -8,6 +8,9 @@ dist
 
 # compiled binaries
 bin
+zettel
+zettel-*.tar.gz
+web-dist/
 
 # code coverage
 coverage

@@ -125,4 +125,20 @@ export class ReferenceRepositoryImpl implements ReferenceRepository {
       .get(zettelId, literatureId)
     return !!row
   }
+
+  findAll(): Reference[] {
+    const db = getDb()
+    const rows = db
+      .prepare(
+        `
+      SELECT * FROM zettel_references
+    `,
+      )
+      .all() as { zettel_id: string; literature_id: string | null }[]
+
+    return rows.map((row) => ({
+      zettelId: row.zettel_id,
+      literatureId: row.literature_id,
+    }))
+  }
 }

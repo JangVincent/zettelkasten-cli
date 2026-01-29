@@ -38,14 +38,26 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Install client dependencies
+        run: cd src/web/client && bun install --frozen-lockfile
+
+      - name: Build web client
+        run: cd src/web/client && bun run build
+
       - name: Build binary
-        run: bun build src/index.ts --compile --target=${{ matrix.target }} --outfile=${{ matrix.artifact }}
+        run: bun build src/index.ts --compile --target=${{ matrix.target }} --outfile=zettel
+
+      - name: Create tarball
+        run: |
+          mkdir -p web-dist
+          cp -r src/web/client/dist/* web-dist/
+          tar -czvf ${{ matrix.artifact }}.tar.gz zettel web-dist
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
-          path: ${{ matrix.artifact }}
+          path: ${{ matrix.artifact }}.tar.gz
 
   release:
     needs: build
@@ -62,8 +74,7 @@ jobs:
       - name: Prepare release files
         run: |
           mkdir -p release
-          find artifacts -type f -name 'zettel-*' -exec mv {} release/ \;
-          chmod +x release/*
+          find artifacts -type f -name '*.tar.gz' -exec mv {} release/ \;
 
       - name: Create release
         uses: softprops/action-gh-release@v2
