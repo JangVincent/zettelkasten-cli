@@ -117,8 +117,30 @@ zettel promote fl:250129:1
 | `zettel dangling` | 끊어진 링크 조회 |
 | `zettel config` | 설정 관리 |
 | `zettel export` | 마크다운 내보내기 |
+| `zettel web` | 웹 UI 실행 |
 
 모든 명령어는 인자 없이 실행하면 **인터랙티브 모드**로 동작합니다.
+
+## 웹 UI
+
+그래픽 인터페이스를 선호하는 사용자를 위한 웹 기반 UI를 제공합니다.
+
+```bash
+zettel web              # 기본 포트 3001에서 시작
+zettel web -p 8080      # 커스텀 포트 지정
+```
+
+브라우저에서 `http://localhost:3001`을 엽니다.
+
+### 기능
+
+- **그래프 뷰**: 노트 연결의 인터랙티브 네트워크 시각화 (Cytoscape.js)
+- **노트 관리**: Zettel, Fleeting, Literature 노트 생성/편집/삭제
+- **연결 관리**: 관계 유형과 함께 연결 생성 및 제거
+- **인덱스 카드**: 인덱스 카드로 노트 정리
+- **검색**: 제목과 ID로 실시간 필터링
+- **히스토리**: 액션 유형별 변경 이력 조회
+- **듀얼 뷰 모드**: 카드 그리드 또는 리스트 테이블 뷰
 
 ## 데이터 저장
 
@@ -153,6 +175,7 @@ zettel export -o ~/backup/zettel  # 커스텀 경로
 - **CLI**: [@clack/prompts](https://github.com/bombshell-dev/clack)
 - **저장**: bun:sqlite (내장 SQLite)
 - **검색**: SQLite FTS5
+- **웹 UI**: React, Vite, Tailwind CSS, Radix UI, Cytoscape.js
 
 ## 개발
 
@@ -162,6 +185,9 @@ bun install
 
 # 개발 실행
 bun run dev
+
+# 웹 UI 개발 (API + Vite)
+bun run dev:web
 
 # 빌드
 bun run build

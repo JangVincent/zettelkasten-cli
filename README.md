@@ -117,8 +117,30 @@ zettel promote fl:250129:1
 | `zettel dangling` | Show broken links |
 | `zettel config` | Manage settings |
 | `zettel export` | Export to markdown |
+| `zettel web` | Launch web UI |
 
 All commands run in **interactive mode** when executed without arguments.
+
+## Web UI
+
+For users who prefer a graphical interface, a web-based UI is available.
+
+```bash
+zettel web              # Start on default port 3001
+zettel web -p 8080      # Start on custom port
+```
+
+Then open `http://localhost:3001` in your browser.
+
+### Features
+
+- **Graph View**: Interactive network visualization of note connections (Cytoscape.js)
+- **Note Management**: Create, edit, delete Zettels, Fleeting notes, and Literature notes
+- **Link Management**: Create and remove connections with relationship types
+- **Index Cards**: Organize notes with index cards
+- **Search**: Real-time filtering by title and ID
+- **History**: View change history with action types
+- **Dual View Modes**: Card grid or list table view
 
 ## Data Storage
 
@@ -153,6 +175,7 @@ Default export path: `~/Documents/zettel/{yymmdd_HHmmss}/`
 - **CLI**: [@clack/prompts](https://github.com/bombshell-dev/clack)
 - **Storage**: bun:sqlite (built-in SQLite)
 - **Search**: SQLite FTS5
+- **Web UI**: React, Vite, Tailwind CSS, Radix UI, Cytoscape.js
 
 ## Development
 
@@ -162,6 +185,9 @@ bun install
 
 # Dev run
 bun run dev
+
+# Web UI development (API + Vite)
+bun run dev:web
 
 # Build
 bun run build
