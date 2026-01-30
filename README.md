@@ -96,7 +96,7 @@ zettel search "entity"
 zettel link 1a 2b
 
 # Promote Fleeting → Zettel
-zettel promote fl:250129:1
+zettel promote fl:1
 ```
 
 ## Commands
@@ -120,6 +120,8 @@ zettel promote fl:250129:1
 | `zettel config` | Manage settings |
 | `zettel export` | Export to markdown |
 | `zettel web` | Launch web UI |
+| `zettel update` | Update to the latest version |
+| `zettel --version` | Show version |
 
 All commands run in **interactive mode** when executed without arguments.
 

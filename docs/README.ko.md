@@ -96,7 +96,7 @@ zettel search "entity"
 zettel link 1a 2b
 
 # Fleeting → Zettel 승격
-zettel promote fl:250129:1
+zettel promote fl:1
 ```
 
 ## 명령어
@@ -120,6 +120,8 @@ zettel promote fl:250129:1
 | `zettel config` | 설정 관리 |
 | `zettel export` | 마크다운 내보내기 |
 | `zettel web` | 웹 UI 실행 |
+| `zettel update` | 최신 버전으로 업데이트 |
+| `zettel --version` | 버전 확인 |
 
 모든 명령어는 인자 없이 실행하면 **인터랙티브 모드**로 동작합니다.
 
