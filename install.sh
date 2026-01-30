@@ -70,4 +70,5 @@ if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
   echo ""
 fi
 
-echo "Run 'zettel --help' to get started"
+echo "Run 'zettel init' to initialization"
+echo "Run 'zettel --help will be great start of journey!"
