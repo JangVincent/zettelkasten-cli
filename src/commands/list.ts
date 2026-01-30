@@ -6,7 +6,7 @@ import {
   LiteratureNoteRepositoryImpl,
   ZettelRepositoryImpl,
 } from '../infra/sqlite'
-import { formatNoteListItem, formatRelativeTime } from '../utils/format'
+import { formatDateTime, formatNoteListItem } from '../utils/format'
 
 type NoteType = 'fleeting' | 'literature' | 'zettel' | 'all'
 
@@ -48,9 +48,12 @@ export async function listCommand(options: ListOptions): Promise<void> {
     const fleeting = fleetingRepo.findAll(limit)
     if (fleeting.length > 0) {
       console.log('\n[Fleeting Notes]')
-      fleeting.forEach((note) => {
-        const time = formatRelativeTime(note.createdAt)
-        console.log(`  ${formatNoteListItem(note)}  (${time})`)
+      fleeting.forEach((note, i) => {
+        const created = formatDateTime(note.createdAt)
+        const updated = formatDateTime(note.updatedAt)
+        if (i > 0) console.log('')
+        console.log(`  ${formatNoteListItem(note)}`)
+        console.log(`    created: ${created}  updated: ${updated}`)
       })
     }
   }
@@ -59,8 +62,12 @@ export async function listCommand(options: ListOptions): Promise<void> {
     const literature = literatureRepo.findAll(limit)
     if (literature.length > 0) {
       console.log('\n[Literature Notes]')
-      literature.forEach((note) => {
+      literature.forEach((note, i) => {
+        const created = formatDateTime(note.createdAt)
+        const updated = formatDateTime(note.updatedAt)
+        if (i > 0) console.log('')
         console.log(`  ${formatNoteListItem(note)}`)
+        console.log(`    created: ${created}  updated: ${updated}`)
       })
     }
   }
@@ -69,8 +76,12 @@ export async function listCommand(options: ListOptions): Promise<void> {
     const zettels = zettelRepo.findAll(limit)
     if (zettels.length > 0) {
       console.log('\n[Zettels]')
-      zettels.forEach((note) => {
+      zettels.forEach((note, i) => {
+        const created = formatDateTime(note.createdAt)
+        const updated = formatDateTime(note.updatedAt)
+        if (i > 0) console.log('')
         console.log(`  ${formatNoteListItem(note)}`)
+        console.log(`    created: ${created}  updated: ${updated}`)
       })
     }
   }

@@ -30,7 +30,7 @@ describe('FleetingNoteRepositoryImpl', () => {
         content: 'Test content',
       })
 
-      expect(note.id).toMatch(/^fl:\d{6}:\d+$/)
+      expect(note.id).toMatch(/^fl:\d+$/)
       expect(note.title).toBe('Test Note')
       expect(note.content).toBe('Test content')
       expect(note.createdAt).toBeInstanceOf(Date)
@@ -39,12 +39,12 @@ describe('FleetingNoteRepositoryImpl', () => {
 
     test('creates a fleeting note with custom ID', () => {
       const note = repo.create({
-        id: 'fl:260129:custom',
+        id: 'fl:custom',
         title: 'Custom ID Note',
         content: 'Content',
       })
 
-      expect(note.id).toBe('fl:260129:custom')
+      expect(note.id).toBe('fl:custom')
     })
 
     test('records history on create', () => {
@@ -59,37 +59,37 @@ describe('FleetingNoteRepositoryImpl', () => {
   describe('findById', () => {
     test('finds existing note', () => {
       const created = repo.create({
-        id: 'fl:260129:1',
+        id: 'fl:1',
         title: 'Test',
         content: 'Content',
       })
 
-      const found = repo.findById('fl:260129:1')
+      const found = repo.findById('fl:1')
       expect(found).not.toBeNull()
       expect(found!.id).toBe(created.id)
       expect(found!.title).toBe(created.title)
     })
 
     test('returns null for non-existent note', () => {
-      const found = repo.findById('fl:260129:nonexistent')
+      const found = repo.findById('fl:nonexistent')
       expect(found).toBeNull()
     })
   })
 
   describe('findAll', () => {
     test('returns all notes', () => {
-      repo.create({ id: 'fl:260129:1', title: 'Note 1', content: 'Content 1' })
-      repo.create({ id: 'fl:260129:2', title: 'Note 2', content: 'Content 2' })
-      repo.create({ id: 'fl:260129:3', title: 'Note 3', content: 'Content 3' })
+      repo.create({ id: 'fl:1', title: 'Note 1', content: 'Content 1' })
+      repo.create({ id: 'fl:2', title: 'Note 2', content: 'Content 2' })
+      repo.create({ id: 'fl:3', title: 'Note 3', content: 'Content 3' })
 
       const notes = repo.findAll()
       expect(notes.length).toBe(3)
     })
 
     test('respects limit parameter', () => {
-      repo.create({ id: 'fl:260129:1', title: 'Note 1', content: 'Content 1' })
-      repo.create({ id: 'fl:260129:2', title: 'Note 2', content: 'Content 2' })
-      repo.create({ id: 'fl:260129:3', title: 'Note 3', content: 'Content 3' })
+      repo.create({ id: 'fl:1', title: 'Note 1', content: 'Content 1' })
+      repo.create({ id: 'fl:2', title: 'Note 2', content: 'Content 2' })
+      repo.create({ id: 'fl:3', title: 'Note 3', content: 'Content 3' })
 
       const notes = repo.findAll(2)
       expect(notes.length).toBe(2)
@@ -98,30 +98,30 @@ describe('FleetingNoteRepositoryImpl', () => {
 
   describe('update', () => {
     test('updates note title', () => {
-      repo.create({ id: 'fl:260129:1', title: 'Original', content: 'Content' })
+      repo.create({ id: 'fl:1', title: 'Original', content: 'Content' })
 
-      const updated = repo.update('fl:260129:1', { title: 'Updated' })
+      const updated = repo.update('fl:1', { title: 'Updated' })
       expect(updated.title).toBe('Updated')
       expect(updated.content).toBe('Content')
     })
 
     test('updates note content', () => {
-      repo.create({ id: 'fl:260129:1', title: 'Title', content: 'Original' })
+      repo.create({ id: 'fl:1', title: 'Title', content: 'Original' })
 
-      const updated = repo.update('fl:260129:1', { content: 'Updated' })
+      const updated = repo.update('fl:1', { content: 'Updated' })
       expect(updated.title).toBe('Title')
       expect(updated.content).toBe('Updated')
     })
 
     test('throws on non-existent note', () => {
       expect(() => {
-        repo.update('fl:260129:nonexistent', { title: 'New' })
+        repo.update('fl:nonexistent', { title: 'New' })
       }).toThrow('Fleeting note not found')
     })
 
     test('records history on update', () => {
-      repo.create({ id: 'fl:260129:1', title: 'Test', content: 'Content' })
-      repo.update('fl:260129:1', { title: 'Updated' })
+      repo.create({ id: 'fl:1', title: 'Test', content: 'Content' })
+      repo.update('fl:1', { title: 'Updated' })
 
       const db = getTestDb()
       const history = db.prepare('SELECT * FROM history WHERE action = ?').all('UPDATE')
@@ -131,21 +131,21 @@ describe('FleetingNoteRepositoryImpl', () => {
 
   describe('delete', () => {
     test('deletes existing note', () => {
-      repo.create({ id: 'fl:260129:1', title: 'Test', content: 'Content' })
+      repo.create({ id: 'fl:1', title: 'Test', content: 'Content' })
 
-      repo.delete('fl:260129:1')
-      expect(repo.findById('fl:260129:1')).toBeNull()
+      repo.delete('fl:1')
+      expect(repo.findById('fl:1')).toBeNull()
     })
 
     test('throws on non-existent note', () => {
       expect(() => {
-        repo.delete('fl:260129:nonexistent')
+        repo.delete('fl:nonexistent')
       }).toThrow('Fleeting note not found')
     })
 
     test('records history on delete', () => {
-      repo.create({ id: 'fl:260129:1', title: 'Test', content: 'Content' })
-      repo.delete('fl:260129:1')
+      repo.create({ id: 'fl:1', title: 'Test', content: 'Content' })
+      repo.delete('fl:1')
 
       const db = getTestDb()
       const history = db.prepare('SELECT * FROM history WHERE action = ?').all('DELETE')
@@ -155,8 +155,8 @@ describe('FleetingNoteRepositoryImpl', () => {
 
   describe('search', () => {
     test('finds notes by title', () => {
-      repo.create({ id: 'fl:260129:1', title: 'Apple', content: 'Content' })
-      repo.create({ id: 'fl:260129:2', title: 'Banana', content: 'Content' })
+      repo.create({ id: 'fl:1', title: 'Apple', content: 'Content' })
+      repo.create({ id: 'fl:2', title: 'Banana', content: 'Content' })
 
       const results = repo.search('Apple')
       expect(results.length).toBe(1)
@@ -164,8 +164,8 @@ describe('FleetingNoteRepositoryImpl', () => {
     })
 
     test('finds notes by content', () => {
-      repo.create({ id: 'fl:260129:1', title: 'Note', content: 'Hello world' })
-      repo.create({ id: 'fl:260129:2', title: 'Other', content: 'Goodbye' })
+      repo.create({ id: 'fl:1', title: 'Note', content: 'Hello world' })
+      repo.create({ id: 'fl:2', title: 'Other', content: 'Goodbye' })
 
       const results = repo.search('Hello')
       expect(results.length).toBe(1)
@@ -173,9 +173,9 @@ describe('FleetingNoteRepositoryImpl', () => {
     })
 
     test('respects limit parameter', () => {
-      repo.create({ id: 'fl:260129:1', title: 'Test 1', content: 'Common' })
-      repo.create({ id: 'fl:260129:2', title: 'Test 2', content: 'Common' })
-      repo.create({ id: 'fl:260129:3', title: 'Test 3', content: 'Common' })
+      repo.create({ id: 'fl:1', title: 'Test 1', content: 'Common' })
+      repo.create({ id: 'fl:2', title: 'Test 2', content: 'Common' })
+      repo.create({ id: 'fl:3', title: 'Test 3', content: 'Common' })
 
       const results = repo.search('Common', 2)
       expect(results.length).toBe(2)
@@ -184,29 +184,27 @@ describe('FleetingNoteRepositoryImpl', () => {
 
   describe('exists', () => {
     test('returns true for existing note', () => {
-      repo.create({ id: 'fl:260129:1', title: 'Test', content: 'Content' })
-      expect(repo.exists('fl:260129:1')).toBe(true)
+      repo.create({ id: 'fl:1', title: 'Test', content: 'Content' })
+      expect(repo.exists('fl:1')).toBe(true)
     })
 
     test('returns false for non-existent note', () => {
-      expect(repo.exists('fl:260129:nonexistent')).toBe(false)
+      expect(repo.exists('fl:nonexistent')).toBe(false)
     })
   })
 
   describe('getNextId', () => {
     test('returns first ID when no notes exist', () => {
-      const date = new Date(2026, 0, 29)
-      const nextId = repo.getNextId(date)
-      expect(nextId).toBe('fl:260129:1')
+      const nextId = repo.getNextId()
+      expect(nextId).toBe('fl:1')
     })
 
     test('increments ID based on existing notes', () => {
-      const date = new Date(2026, 0, 29)
-      repo.create({ id: 'fl:260129:1', title: 'Test 1', content: 'Content' })
-      repo.create({ id: 'fl:260129:2', title: 'Test 2', content: 'Content' })
+      repo.create({ id: 'fl:1', title: 'Test 1', content: 'Content' })
+      repo.create({ id: 'fl:2', title: 'Test 2', content: 'Content' })
 
-      const nextId = repo.getNextId(date)
-      expect(nextId).toBe('fl:260129:3')
+      const nextId = repo.getNextId()
+      expect(nextId).toBe('fl:3')
     })
   })
 })

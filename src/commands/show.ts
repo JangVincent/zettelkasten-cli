@@ -10,7 +10,7 @@ import {
   ReferenceRepositoryImpl,
   ZettelRepositoryImpl,
 } from '../infra/sqlite'
-import { box, formatNoteListItem } from '../utils/format'
+import { box, formatDateTime, formatNoteListItem } from '../utils/format'
 import { detectIdType } from '../utils/id'
 
 interface ShowOptions {
@@ -92,8 +92,10 @@ export async function showCommand(options: ShowOptions): Promise<void> {
 function displayFleetingNote(note: FleetingNote): void {
   const header = `[${note.id}] ${note.title}`
   const typeInfo = `${t('showType')}: fleeting`
+  const created = `created: ${formatDateTime(note.createdAt)}`
+  const updated = `updated: ${formatDateTime(note.updatedAt)}`
 
-  const lines = [header, typeInfo, '─'.repeat(40), '', note.content, '']
+  const lines = [header, typeInfo, created, updated, '─'.repeat(40), '', note.content, '']
 
   console.log('\n' + box(lines.join('\n')))
 }
@@ -107,11 +109,15 @@ function displayLiteratureNote(
   const title = note.title
   const typeInfo = `${t('showType')}: literature`
   const sourceInfo = `${t('showSource')}: ${note.source}`
+  const created = `created: ${formatDateTime(note.createdAt)}`
+  const updated = `updated: ${formatDateTime(note.updatedAt)}`
 
   const lines = [
     header,
     title,
     typeInfo,
+    created,
+    updated,
     '─'.repeat(40),
     sourceInfo,
     '─'.repeat(40),
@@ -146,8 +152,10 @@ function displayZettel(
 ): void {
   const header = `[${note.id}] ${note.title}`
   const typeInfo = `${t('showType')}: zettel`
+  const created = `created: ${formatDateTime(note.createdAt)}`
+  const updated = `updated: ${formatDateTime(note.updatedAt)}`
 
-  const lines = [header, typeInfo, '─'.repeat(40), '', note.content, '']
+  const lines = [header, typeInfo, created, updated, '─'.repeat(40), '', note.content, '']
 
   // Outgoing 링크
   const outgoing = linkRepo.findOutgoing(note.id)

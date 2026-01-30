@@ -129,7 +129,7 @@ export function formatNoteListItem(note: FleetingNote | LiteratureNote | Zettel)
   const maxTitleLen = 40
   const title =
     note.title.length > maxTitleLen ? note.title.slice(0, maxTitleLen - 3) + '...' : note.title
-  return `${note.id}  ${title}`
+  return `[${note.id}] ${title}`
 }
 
 /**

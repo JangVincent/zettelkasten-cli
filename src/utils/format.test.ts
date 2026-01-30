@@ -14,13 +14,13 @@ import {
 describe('formatNoteListItem', () => {
   test('formats note with short title', () => {
     const note: FleetingNote = {
-      id: 'fl:260129:1',
+      id: 'fl:1',
       title: 'Short title',
       content: 'Content',
       createdAt: new Date(),
       updatedAt: new Date(),
     }
-    expect(formatNoteListItem(note)).toBe('fl:260129:1  Short title')
+    expect(formatNoteListItem(note)).toBe('[fl:1] Short title')
   })
 
   test('truncates long title', () => {

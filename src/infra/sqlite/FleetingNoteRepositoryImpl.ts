@@ -10,7 +10,7 @@ export class FleetingNoteRepositoryImpl implements FleetingNoteRepository {
     const db = getDb()
     const now = new Date()
     const nowStr = now.toISOString()
-    const id = input.id || this.getNextId(now)
+    const id = input.id || this.getNextId()
 
     const txn = db.transaction(() => {
       db.prepare(
@@ -215,21 +215,20 @@ export class FleetingNoteRepositoryImpl implements FleetingNoteRepository {
     }))
   }
 
-  getNextId(date: Date): string {
+  getNextId(): string {
     const db = getDb()
-    const dateStr = formatDate(date)
-    const prefix = `fl:${dateStr}:`
+    const prefix = 'fl:'
 
     const row = db
       .prepare(
         `
       SELECT id FROM fleeting_notes
-      WHERE id LIKE ?
-      ORDER BY id DESC
+      WHERE id LIKE 'fl:%'
+      ORDER BY CAST(SUBSTR(id, 4) AS INTEGER) DESC
       LIMIT 1
     `,
       )
-      .get(`${prefix}%`) as { id: string } | null
+      .get() as { id: string } | null
 
     if (!row) {
       return `${prefix}1`
@@ -249,11 +248,4 @@ export class FleetingNoteRepositoryImpl implements FleetingNoteRepository {
     const row = db.prepare(`SELECT 1 FROM fleeting_notes WHERE id = ?`).get(id)
     return !!row
   }
-}
-
-function formatDate(date: Date): string {
-  const y = String(date.getFullYear()).slice(-2)
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return `${y}${m}${d}`
 }

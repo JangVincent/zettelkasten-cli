@@ -7,6 +7,6 @@ export interface FleetingNoteRepository {
   update(id: string, input: Partial<CreateFleetingNoteInput>): FleetingNote
   delete(id: string): void
   search(query: string, limit?: number): FleetingNote[]
-  getNextId(date: Date): string
+  getNextId(): string
   exists(id: string): boolean
 }

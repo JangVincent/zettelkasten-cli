@@ -10,7 +10,7 @@ import {
 } from '../infra/sqlite'
 import { openEditor } from '../utils/editor'
 import { formatNoteListItem } from '../utils/format'
-import { formatDateForId, isValidZettelId } from '../utils/id'
+import { isValidZettelId } from '../utils/id'
 
 type NoteType = 'fleeting' | 'literature' | 'zettel'
 
@@ -71,9 +71,8 @@ async function createFleetingNote(
   repo: FleetingNoteRepositoryImpl,
   options: NewOptions,
 ): Promise<void> {
-  const now = new Date()
-  const suggestedId = repo.getNextId(now)
-  const idSuffix = suggestedId.split(':').pop()!
+  const suggestedId = repo.getNextId()
+  const idSuffix = suggestedId.slice(3) // 'fl:' 이후
 
   // ID 입력 (옵션)
   const idInput = await p.text({
@@ -87,8 +86,7 @@ async function createFleetingNote(
     return
   }
 
-  const datePrefix = formatDateForId(now)
-  const id = `fl:${datePrefix}:${idInput || idSuffix}`
+  const id = `fl:${idInput || idSuffix}`
 
   // 중복 체크
   if (repo.exists(id)) {

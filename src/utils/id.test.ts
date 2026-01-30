@@ -2,7 +2,6 @@ import { describe, expect, test } from 'bun:test'
 
 import {
   detectIdType,
-  formatDateForId,
   isValidFleetingId,
   isValidLiteratureId,
   isValidZettelId,
@@ -37,25 +36,25 @@ describe('isValidZettelId', () => {
 
 describe('isValidFleetingId', () => {
   test('valid Fleeting IDs', () => {
-    expect(isValidFleetingId('fl:260129:1')).toBe(true)
-    expect(isValidFleetingId('fl:250101:abc')).toBe(true)
-    expect(isValidFleetingId('fl:991231:ABC123')).toBe(true)
+    expect(isValidFleetingId('fl:1')).toBe(true)
+    expect(isValidFleetingId('fl:abc')).toBe(true)
+    expect(isValidFleetingId('fl:ABC123')).toBe(true)
+    expect(isValidFleetingId('fl:my-idea')).toBe(true)
+    expect(isValidFleetingId('fl:note_1')).toBe(true)
   })
 
   test('invalid Fleeting IDs - wrong prefix', () => {
-    expect(isValidFleetingId('fleeting:260129:1')).toBe(false)
-    expect(isValidFleetingId('260129:1')).toBe(false)
+    expect(isValidFleetingId('fleeting:1')).toBe(false)
+    expect(isValidFleetingId('1')).toBe(false)
   })
 
-  test('invalid Fleeting IDs - wrong date format', () => {
-    expect(isValidFleetingId('fl:2601291:1')).toBe(false)
-    expect(isValidFleetingId('fl:26012:1')).toBe(false)
-    expect(isValidFleetingId('fl:abcdef:1')).toBe(false)
+  test('invalid Fleeting IDs - invalid characters', () => {
+    expect(isValidFleetingId('fl:hello world')).toBe(false)
+    expect(isValidFleetingId('fl:a.b')).toBe(false)
   })
 
   test('invalid Fleeting IDs - missing suffix', () => {
-    expect(isValidFleetingId('fl:260129:')).toBe(false)
-    expect(isValidFleetingId('fl:260129')).toBe(false)
+    expect(isValidFleetingId('fl:')).toBe(false)
   })
 })
 
@@ -82,26 +81,9 @@ describe('isValidLiteratureId', () => {
   })
 })
 
-describe('formatDateForId', () => {
-  test('formats date correctly', () => {
-    const date = new Date(2026, 0, 29) // 2026-01-29
-    expect(formatDateForId(date)).toBe('260129')
-  })
-
-  test('pads month and day with zeros', () => {
-    const date = new Date(2025, 0, 1) // 2025-01-01
-    expect(formatDateForId(date)).toBe('250101')
-  })
-
-  test('handles December correctly', () => {
-    const date = new Date(2024, 11, 31) // 2024-12-31
-    expect(formatDateForId(date)).toBe('241231')
-  })
-})
-
 describe('detectIdType', () => {
   test('detects fleeting IDs', () => {
-    expect(detectIdType('fl:260129:1')).toBe('fleeting')
+    expect(detectIdType('fl:1')).toBe('fleeting')
     expect(detectIdType('fl:anything')).toBe('fleeting')
   })
 

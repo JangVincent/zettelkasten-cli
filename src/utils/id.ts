@@ -12,10 +12,10 @@ export function isValidZettelId(id: string): boolean {
 
 /**
  * Fleeting ID 검증
- * 형식: fl:yymmdd:suffix
+ * 형식: fl:suffix
  */
 export function isValidFleetingId(id: string): boolean {
-  return /^fl:\d{6}:[a-zA-Z0-9]+$/.test(id)
+  return /^fl:[a-zA-Z0-9_-]+$/.test(id)
 }
 
 /**
@@ -24,16 +24,6 @@ export function isValidFleetingId(id: string): boolean {
  */
 export function isValidLiteratureId(id: string): boolean {
   return /^lit:[a-zA-Z0-9_-]+$/.test(id)
-}
-
-/**
- * 날짜를 yymmdd 형식으로 포맷
- */
-export function formatDateForId(date: Date): string {
-  const y = String(date.getFullYear()).slice(-2)
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return `${y}${m}${d}`
 }
 
 /**
