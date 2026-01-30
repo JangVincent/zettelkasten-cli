@@ -65,10 +65,35 @@ echo ""
 
 # Check if INSTALL_DIR is in PATH
 if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
-  echo "Add this to your shell profile:"
-  echo "  export PATH=\"\$PATH:$INSTALL_DIR\""
+  SHELL_NAME=$(basename "${SHELL:-/bin/bash}")
+  echo "To use zettel, add it to your PATH:"
+  echo ""
+  case "$SHELL_NAME" in
+    zsh)
+      echo "  echo 'export PATH=\"\$PATH:$INSTALL_DIR\"' >> ~/.zshrc"
+      echo "  source ~/.zshrc"
+      ;;
+    bash)
+      echo "  echo 'export PATH=\"\$PATH:$INSTALL_DIR\"' >> ~/.bashrc"
+      echo "  source ~/.bashrc"
+      ;;
+    fish)
+      echo "  fish_add_path $INSTALL_DIR"
+      echo ""
+      echo "  Or to persist, add to ~/.config/fish/config.fish:"
+      echo "  set -gx PATH \$PATH $INSTALL_DIR"
+      ;;
+    *)
+      echo "  export PATH=\"\$PATH:$INSTALL_DIR\""
+      echo ""
+      echo "  Add the line above to your shell profile to persist."
+      ;;
+  esac
+  echo ""
+else
+  echo "zettel is already in your PATH."
   echo ""
 fi
 
-echo "Run 'zettel init' to initialization"
-echo "Run 'zettel --help will be great start of journey!"
+echo "Run 'zettel init' to initialize"
+echo "Run 'zettel --help' for a great start of the journey!"
