@@ -237,6 +237,7 @@ export default function App() {
   const [history, setHistory] = useState<HistoryEntry[]>([])
   const [selectedNote, setSelectedNote] = useState<Zettel | FleetingNote | LiteratureNote | null>(null)
   const [selectedType, setSelectedType] = useState<NoteType | null>(null)
+  const [selectedIndex, setSelectedIndex] = useState<IndexCard | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [createType, setCreateType] = useState<NoteType>('zettel')
@@ -343,6 +344,13 @@ export default function App() {
   const handleSelectNote = (note: Zettel | FleetingNote | LiteratureNote, type: NoteType) => {
     setSelectedNote(note)
     setSelectedType(type)
+    setSelectedIndex(null)
+  }
+
+  const handleSelectIndex = (idx: IndexCard) => {
+    setSelectedIndex(idx)
+    setSelectedNote(null)
+    setSelectedType(null)
   }
 
   const handleDelete = async () => {
@@ -518,6 +526,7 @@ export default function App() {
                 indexes={indexes}
                 zettels={zettels}
                 onSelectZettel={(z) => handleSelectNote(z, 'zettel')}
+                onSelectIndex={handleSelectIndex}
                 onDelete={async (name) => {
                   if (!confirm(`Delete index "${name}"?`)) return
                   await api.deleteIndex(name)
@@ -593,6 +602,7 @@ export default function App() {
               outgoingLinks={selectedType === 'zettel' ? getOutgoingLinks(selectedNote.id) : []}
               incomingLinks={selectedType === 'zettel' ? getIncomingLinks(selectedNote.id) : []}
               zettels={zettels}
+              indexes={indexes}
               onClose={() => setSelectedNote(null)}
               onEdit={() => setEditDialogOpen(true)}
               onDelete={handleDelete}
@@ -603,6 +613,36 @@ export default function App() {
               }}
               onSelectZettel={(z) => handleSelectNote(z, 'zettel')}
               onPromote={selectedType === 'fleeting' ? () => setPromoteDialogOpen(true) : undefined}
+              onAddToIndex={() => setAddToIndexDialogOpen(true)}
+              onRemoveFromIndex={async (indexName) => {
+                await api.removeFromIndex(indexName, selectedNote.id)
+                await reloadAfterMutation()
+              }}
+              width={detailPanelWidth}
+              onResize={setDetailPanelWidth}
+            />
+          )}
+          {selectedIndex && (
+            <IndexDetailPanel
+              index={selectedIndex}
+              zettels={zettels}
+              onClose={() => setSelectedIndex(null)}
+              onSelectZettel={(z) => handleSelectNote(z, 'zettel')}
+              onRemoveEntry={async (zettelId) => {
+                await api.removeFromIndex(selectedIndex.name, zettelId)
+                await reloadAfterMutation()
+                const updated = await api.getIndexes()
+                const refreshed = updated.find(i => i.name === selectedIndex.name)
+                if (refreshed) setSelectedIndex(refreshed)
+                else setSelectedIndex(null)
+              }}
+              onAddEntry={() => setAddToIndexDialogOpen(true)}
+              onDelete={async () => {
+                if (!confirm(`Delete index "${selectedIndex.name}"?`)) return
+                await api.deleteIndex(selectedIndex.name)
+                setSelectedIndex(null)
+                await reloadAfterMutation()
+              }}
               width={detailPanelWidth}
               onResize={setDetailPanelWidth}
             />
@@ -950,16 +990,15 @@ function GraphView({ zettels, links, onSelect }: {
 }
 
 // Indexes View
-function IndexesView({ indexes, zettels, onSelectZettel, onDelete, onRemoveEntry, onAddEntry }: {
+function IndexesView({ indexes, zettels, onSelectZettel, onSelectIndex, onDelete, onRemoveEntry, onAddEntry }: {
   indexes: IndexCard[]
   zettels: Zettel[]
   onSelectZettel: (z: Zettel) => void
+  onSelectIndex: (idx: IndexCard) => void
   onDelete: (name: string) => void
   onRemoveEntry: (indexName: string, zettelId: string) => void
   onAddEntry: () => void
 }) {
-  const [expanded, setExpanded] = useState<string | null>(null)
-
   if (indexes.length === 0) {
     return <div className="flex items-center justify-center h-full text-muted-foreground">No indexes</div>
   }
@@ -973,59 +1012,19 @@ function IndexesView({ indexes, zettels, onSelectZettel, onDelete, onRemoveEntry
         </Button>
       </div>
       {indexes.map(idx => (
-        <Card key={idx.name}>
-          <CardHeader
-            className="cursor-pointer py-3"
-            onClick={() => setExpanded(expanded === idx.name ? null : idx.name)}
-          >
+        <Card
+          key={idx.name}
+          className="cursor-pointer transition-colors hover:border-foreground/20"
+          onClick={() => onSelectIndex(idx)}
+        >
+          <CardHeader className="py-3">
             <div className="flex justify-between items-center">
               <CardTitle className="text-sm">{idx.name}</CardTitle>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">{idx.entries.length}</span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={(e) => { e.stopPropagation(); onDelete(idx.name) }}
-                >
-                  <Trash2 className="w-3 h-3" />
-                </Button>
+                <span className="text-xs text-muted-foreground">{idx.entries.length} entries</span>
               </div>
             </div>
           </CardHeader>
-          {expanded === idx.name && (
-            <CardContent className="pt-0">
-              {idx.entries.map(entry => {
-                const z = zettels.find(z => z.id === entry.zettelId)
-                return z ? (
-                  <div
-                    key={entry.zettelId}
-                    className="flex items-center gap-3 py-2 hover:bg-secondary/50 -mx-6 px-6"
-                  >
-                    <span
-                      className="font-mono text-xs text-muted-foreground cursor-pointer hover:underline"
-                      onClick={() => onSelectZettel(z)}
-                    >
-                      {z.id}
-                    </span>
-                    <span className="text-sm flex-1 cursor-pointer" onClick={() => onSelectZettel(z)}>{z.title}</span>
-                    {entry.label && <span className="text-xs text-muted-foreground">({entry.label})</span>}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6"
-                      onClick={() => onRemoveEntry(idx.name, entry.zettelId)}
-                    >
-                      <X className="w-3 h-3" />
-                    </Button>
-                  </div>
-                ) : null
-              })}
-              {idx.entries.length === 0 && (
-                <p className="text-sm text-muted-foreground py-2">No entries</p>
-              )}
-            </CardContent>
-          )}
         </Card>
       ))}
     </div>
@@ -1034,8 +1033,9 @@ function IndexesView({ indexes, zettels, onSelectZettel, onDelete, onRemoveEntry
 
 // Detail Panel
 function DetailPanel({
-  note, type, outgoingLinks, incomingLinks, zettels,
+  note, type, outgoingLinks, incomingLinks, zettels, indexes,
   onClose, onEdit, onDelete, onAddLink, onDeleteLink, onSelectZettel, onPromote,
+  onAddToIndex, onRemoveFromIndex,
   width, onResize
 }: {
   note: Zettel | FleetingNote | LiteratureNote
@@ -1043,6 +1043,7 @@ function DetailPanel({
   outgoingLinks: Link[]
   incomingLinks: Link[]
   zettels: Zettel[]
+  indexes: IndexCard[]
   onClose: () => void
   onEdit: () => void
   onDelete: () => void
@@ -1050,6 +1051,8 @@ function DetailPanel({
   onDeleteLink: (targetId: string) => void
   onSelectZettel: (z: Zettel) => void
   onPromote?: () => void
+  onAddToIndex: () => void
+  onRemoveFromIndex: (indexName: string) => void
   width: number
   onResize: (width: number) => void
 }) {
@@ -1188,8 +1191,148 @@ function DetailPanel({
                 </div>
               )}
             </div>
+
+            <Separator />
+
+            {/* Indexes section */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-semibold">Indexes</h4>
+                <Button variant="ghost" size="sm" onClick={onAddToIndex}>
+                  <FolderTree className="w-4 h-4 mr-1" />
+                  Add
+                </Button>
+              </div>
+              {(() => {
+                const belongsTo = indexes.filter(idx => idx.entries.some(e => e.zettelId === note.id))
+                if (belongsTo.length === 0) {
+                  return <p className="text-xs text-muted-foreground">Not in any index</p>
+                }
+                return belongsTo.map(idx => (
+                  <div key={idx.name} className="flex items-center gap-2 py-1 text-sm">
+                    <FolderTree className="w-3 h-3 text-muted-foreground" />
+                    <span className="flex-1">{idx.name}</span>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onRemoveFromIndex(idx.name)}>
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ))
+              })()}
+            </div>
           </>
         )}
+      </div>
+    </aside>
+  )
+}
+
+// Index Detail Panel
+function IndexDetailPanel({
+  index, zettels, onClose, onSelectZettel, onRemoveEntry, onAddEntry, onDelete,
+  width, onResize
+}: {
+  index: IndexCard
+  zettels: Zettel[]
+  onClose: () => void
+  onSelectZettel: (z: Zettel) => void
+  onRemoveEntry: (zettelId: string) => void
+  onAddEntry: () => void
+  onDelete: () => void
+  width: number
+  onResize: (width: number) => void
+}) {
+  const isResizing = useRef(false)
+  const startX = useRef(0)
+  const startWidth = useRef(0)
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    isResizing.current = true
+    startX.current = e.clientX
+    startWidth.current = width
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+  }
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isResizing.current) return
+    const diff = startX.current - e.clientX
+    const newWidth = Math.min(800, Math.max(280, startWidth.current + diff))
+    onResize(newWidth)
+  }
+
+  const handleMouseUp = () => {
+    isResizing.current = false
+    document.removeEventListener('mousemove', handleMouseMove)
+    document.removeEventListener('mouseup', handleMouseUp)
+    document.body.style.cursor = ''
+    document.body.style.userSelect = ''
+  }
+
+  return (
+    <aside className="border-l border-border flex flex-col relative" style={{ width }}>
+      <div
+        className="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-foreground/20 active:bg-foreground/30 z-10"
+        onMouseDown={handleMouseDown}
+      />
+      <div className="p-4 border-b border-border flex items-center justify-between">
+        <h2 className="font-semibold">Index Details</h2>
+        <div className="flex gap-1">
+          <Button variant="ghost" size="icon" onClick={onDelete}>
+            <Trash2 className="w-4 h-4" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-auto p-4 space-y-4">
+        <div>
+          <h3 className="text-lg font-semibold">{index.name}</h3>
+          <p className="text-sm text-muted-foreground mt-1">{index.entries.length} entries</p>
+        </div>
+
+        <Separator />
+
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-semibold">Entries</h4>
+            <Button variant="ghost" size="sm" onClick={onAddEntry}>
+              <Plus className="w-4 h-4 mr-1" />
+              Add
+            </Button>
+          </div>
+
+          {index.entries.length === 0 && (
+            <p className="text-xs text-muted-foreground">No entries</p>
+          )}
+
+          {index.entries.map(entry => {
+            const z = zettels.find(z => z.id === entry.zettelId)
+            return (
+              <div key={entry.zettelId} className="flex items-center gap-2 py-1 text-sm">
+                <span
+                  className="font-mono text-xs text-muted-foreground cursor-pointer hover:underline"
+                  onClick={() => z && onSelectZettel(z)}
+                >
+                  {entry.zettelId}
+                </span>
+                <span
+                  className="flex-1 cursor-pointer hover:underline"
+                  onClick={() => z && onSelectZettel(z)}
+                >
+                  {z?.title ?? entry.zettelId}
+                </span>
+                {entry.label && <span className="text-xs text-muted-foreground">({entry.label})</span>}
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onRemoveEntry(entry.zettelId)}>
+                  <X className="w-3 h-3" />
+                </Button>
+              </div>
+            )
+          })}
+        </div>
       </div>
     </aside>
   )
