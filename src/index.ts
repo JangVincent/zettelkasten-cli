@@ -20,6 +20,7 @@ import {
   showCommand,
   treeCommand,
   unlinkCommand,
+  updateCommand,
   webCommand,
 } from './commands'
 import type { Language } from './domain/repositories'
@@ -28,10 +29,14 @@ import { isInitialized, openDb } from './infra/sqlite'
 import { SettingsRepositoryImpl } from './infra/sqlite/SettingsRepositoryImpl'
 
 // 버전 정보
+import pkg from '../package.json'
+
+export const VERSION = pkg.version
+
 program
   .name('zettel')
   .description('Terminal-based Zettelkasten knowledge management system')
-  .version('0.1.0')
+  .version(VERSION)
 
 // init 명령어
 program
@@ -273,6 +278,14 @@ program
       })
     })(),
   )
+
+// update 명령어 (초기화 불필요)
+program
+  .command('update')
+  .description('Update zettel to the latest version')
+  .action(async () => {
+    await updateCommand()
+  })
 
 // self-delete 명령어 (초기화 불필요)
 program
