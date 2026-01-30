@@ -73,13 +73,21 @@ export class FleetingNoteRepositoryImpl implements FleetingNoteRepository {
     }
   }
 
-  findAll(limit?: number): FleetingNote[] {
+  findAll(limit?: number, offset?: number): FleetingNote[] {
     const db = getDb()
-    const query = limit
-      ? `SELECT * FROM fleeting_notes ORDER BY created_at DESC LIMIT ?`
-      : `SELECT * FROM fleeting_notes ORDER BY created_at DESC`
+    let query = `SELECT * FROM fleeting_notes ORDER BY created_at DESC`
+    const params: number[] = []
 
-    const rows = (limit ? db.prepare(query).all(limit) : db.prepare(query).all()) as {
+    if (limit) {
+      query += ` LIMIT ?`
+      params.push(limit)
+      if (offset) {
+        query += ` OFFSET ?`
+        params.push(offset)
+      }
+    }
+
+    const rows = db.prepare(query).all(...params) as {
       id: string
       title: string
       content: string
@@ -94,6 +102,14 @@ export class FleetingNoteRepositoryImpl implements FleetingNoteRepository {
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at),
     }))
+  }
+
+  count(): number {
+    const db = getDb()
+    const row = db.prepare(`SELECT COUNT(*) as total FROM fleeting_notes`).get() as {
+      total: number
+    }
+    return row.total
   }
 
   update(id: string, input: Partial<CreateFleetingNoteInput>): FleetingNote {

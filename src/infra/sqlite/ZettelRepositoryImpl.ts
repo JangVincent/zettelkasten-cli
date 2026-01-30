@@ -72,13 +72,21 @@ export class ZettelRepositoryImpl implements ZettelRepository {
     }
   }
 
-  findAll(limit?: number): Zettel[] {
+  findAll(limit?: number, offset?: number): Zettel[] {
     const db = getDb()
-    const query = limit
-      ? `SELECT * FROM zettels ORDER BY id LIMIT ?`
-      : `SELECT * FROM zettels ORDER BY id`
+    let query = `SELECT * FROM zettels ORDER BY id`
+    const params: number[] = []
 
-    const rows = (limit ? db.prepare(query).all(limit) : db.prepare(query).all()) as {
+    if (limit) {
+      query += ` LIMIT ?`
+      params.push(limit)
+      if (offset) {
+        query += ` OFFSET ?`
+        params.push(offset)
+      }
+    }
+
+    const rows = db.prepare(query).all(...params) as {
       id: string
       title: string
       content: string
@@ -93,6 +101,12 @@ export class ZettelRepositoryImpl implements ZettelRepository {
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at),
     }))
+  }
+
+  count(): number {
+    const db = getDb()
+    const row = db.prepare(`SELECT COUNT(*) as total FROM zettels`).get() as { total: number }
+    return row.total
   }
 
   update(id: string, input: Partial<CreateZettelInput>): Zettel {

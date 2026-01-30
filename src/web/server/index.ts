@@ -150,6 +150,26 @@ interface Repos {
   historyRepo: HistoryRepositoryImpl
 }
 
+function parsePagination(req: Request) {
+  const url = new URL(req.url)
+  const page = Math.max(1, parseInt(url.searchParams.get('page') || '1'))
+  const limit = Math.max(1, Math.min(100, parseInt(url.searchParams.get('limit') || '50')))
+  const offset = (page - 1) * limit
+  return { page, limit, offset }
+}
+
+function paginatedResponse<T>(data: T[], total: number, page: number, limit: number) {
+  return Response.json({
+    data,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  })
+}
+
 async function handleApi(
   pathname: string,
   method: string,
@@ -162,7 +182,10 @@ async function handleApi(
   // Zettels
   if (pathname === '/api/zettels') {
     if (method === 'GET') {
-      return Response.json(zettelRepo.findAll())
+      const { page, limit, offset } = parsePagination(req)
+      const total = zettelRepo.count()
+      const data = zettelRepo.findAll(limit, offset)
+      return paginatedResponse(data, total, page, limit)
     }
     if (method === 'POST') {
       const body = await req.json()
@@ -206,7 +229,10 @@ async function handleApi(
   // Fleeting notes
   if (pathname === '/api/fleeting') {
     if (method === 'GET') {
-      return Response.json(fleetingRepo.findAll())
+      const { page, limit, offset } = parsePagination(req)
+      const total = fleetingRepo.count()
+      const data = fleetingRepo.findAll(limit, offset)
+      return paginatedResponse(data, total, page, limit)
     }
     if (method === 'POST') {
       const body = await req.json()
@@ -260,7 +286,10 @@ async function handleApi(
   // Literature notes
   if (pathname === '/api/literature') {
     if (method === 'GET') {
-      return Response.json(literatureRepo.findAll())
+      const { page, limit, offset } = parsePagination(req)
+      const total = literatureRepo.count()
+      const data = literatureRepo.findAll(limit, offset)
+      return paginatedResponse(data, total, page, limit)
     }
     if (method === 'POST') {
       const body = await req.json()
@@ -335,9 +364,10 @@ async function handleApi(
   // History
   if (pathname === '/api/history') {
     if (method === 'GET') {
-      const url = new URL(req.url)
-      const limit = parseInt(url.searchParams.get('limit') || '50')
-      return Response.json(historyRepo.findAll(limit))
+      const { page, limit, offset } = parsePagination(req)
+      const total = historyRepo.count()
+      const data = historyRepo.findAll(limit, offset)
+      return paginatedResponse(data, total, page, limit)
     }
   }
 

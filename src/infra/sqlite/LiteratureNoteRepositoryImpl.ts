@@ -76,13 +76,21 @@ export class LiteratureNoteRepositoryImpl implements LiteratureNoteRepository {
     }
   }
 
-  findAll(limit?: number): LiteratureNote[] {
+  findAll(limit?: number, offset?: number): LiteratureNote[] {
     const db = getDb()
-    const query = limit
-      ? `SELECT * FROM literature_notes ORDER BY created_at DESC LIMIT ?`
-      : `SELECT * FROM literature_notes ORDER BY created_at DESC`
+    let query = `SELECT * FROM literature_notes ORDER BY created_at DESC`
+    const params: number[] = []
 
-    const rows = (limit ? db.prepare(query).all(limit) : db.prepare(query).all()) as {
+    if (limit) {
+      query += ` LIMIT ?`
+      params.push(limit)
+      if (offset) {
+        query += ` OFFSET ?`
+        params.push(offset)
+      }
+    }
+
+    const rows = db.prepare(query).all(...params) as {
       id: string
       title: string
       content: string
@@ -99,6 +107,14 @@ export class LiteratureNoteRepositoryImpl implements LiteratureNoteRepository {
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at),
     }))
+  }
+
+  count(): number {
+    const db = getDb()
+    const row = db.prepare(`SELECT COUNT(*) as total FROM literature_notes`).get() as {
+      total: number
+    }
+    return row.total
   }
 
   update(id: string, input: Partial<CreateLiteratureNoteInput>): LiteratureNote {

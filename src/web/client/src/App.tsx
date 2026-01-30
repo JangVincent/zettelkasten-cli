@@ -82,16 +82,28 @@ interface HistoryEntry {
 type NoteType = 'zettel' | 'fleeting' | 'literature'
 type View = 'graph' | 'zettels' | 'fleeting' | 'literature' | 'indexes' | 'references' | 'history'
 
+interface PaginationInfo {
+  page: number
+  limit: number
+  total: number
+  totalPages: number
+}
+
+interface PaginatedResponse<T> {
+  data: T[]
+  pagination: PaginationInfo
+}
+
 // API
 const api = {
-  async getZettels(): Promise<Zettel[]> {
-    return fetch('/api/zettels').then(r => r.json())
+  async getZettels(page = 1, limit = 50): Promise<PaginatedResponse<Zettel>> {
+    return fetch(`/api/zettels?page=${page}&limit=${limit}`).then(r => r.json())
   },
-  async getFleeting(): Promise<FleetingNote[]> {
-    return fetch('/api/fleeting').then(r => r.json())
+  async getFleeting(page = 1, limit = 50): Promise<PaginatedResponse<FleetingNote>> {
+    return fetch(`/api/fleeting?page=${page}&limit=${limit}`).then(r => r.json())
   },
-  async getLiterature(): Promise<LiteratureNote[]> {
-    return fetch('/api/literature').then(r => r.json())
+  async getLiterature(page = 1, limit = 50): Promise<PaginatedResponse<LiteratureNote>> {
+    return fetch(`/api/literature?page=${page}&limit=${limit}`).then(r => r.json())
   },
   async getLinks(): Promise<Link[]> {
     return fetch('/api/links').then(r => r.json())
@@ -200,8 +212,8 @@ const api = {
     await fetch(`/api/references/${encodeURIComponent(zettelId)}/${encodeURIComponent(literatureId)}`, { method: 'DELETE' })
   },
   // History
-  async getHistory(limit: number = 50): Promise<HistoryEntry[]> {
-    return fetch(`/api/history?limit=${limit}`).then(r => r.json())
+  async getHistory(page = 1, limit = 50): Promise<PaginatedResponse<HistoryEntry>> {
+    return fetch(`/api/history?page=${page}&limit=${limit}`).then(r => r.json())
   },
   // Promote fleeting to zettel
   async promoteFleeting(fleetingId: string, zettelId?: string): Promise<Zettel> {
@@ -237,28 +249,96 @@ export default function App() {
   const [promoteDialogOpen, setPromoteDialogOpen] = useState(false)
   const [detailPanelWidth, setDetailPanelWidth] = useState(384)
 
-  useEffect(() => {
-    loadData()
-  }, [])
+  // Pagination state
+  const [zettelPage, setZettelPage] = useState(1)
+  const [fleetingPage, setFleetingPage] = useState(1)
+  const [literaturePage, setLiteraturePage] = useState(1)
+  const [historyPage, setHistoryPage] = useState(1)
+  const [zettelPagination, setZettelPagination] = useState<PaginationInfo | null>(null)
+  const [fleetingPagination, setFleetingPagination] = useState<PaginationInfo | null>(null)
+  const [literaturePagination, setLiteraturePagination] = useState<PaginationInfo | null>(null)
+  const [historyPagination, setHistoryPagination] = useState<PaginationInfo | null>(null)
+  const PAGE_SIZE = 50
 
-  const loadData = async () => {
-    const [z, f, l, lk, idx, refs, hist] = await Promise.all([
-      api.getZettels(),
-      api.getFleeting(),
-      api.getLiterature(),
+  const loadStaticData = async () => {
+    const [lk, idx, refs] = await Promise.all([
       api.getLinks(),
       api.getIndexes(),
       api.getReferences(),
-      api.getHistory(),
     ])
-    setZettels(z)
-    setFleeting(f)
-    setLiterature(l)
     setLinks(lk)
     setIndexes(idx)
     setReferences(refs)
-    setHistory(hist)
   }
+
+  const loadZettels = async (page: number) => {
+    const res = await api.getZettels(page, PAGE_SIZE)
+    setZettels(res.data)
+    setZettelPagination(res.pagination)
+    return res
+  }
+
+  const loadFleeting = async (page: number) => {
+    const res = await api.getFleeting(page, PAGE_SIZE)
+    setFleeting(res.data)
+    setFleetingPagination(res.pagination)
+    return res
+  }
+
+  const loadLiterature = async (page: number) => {
+    const res = await api.getLiterature(page, PAGE_SIZE)
+    setLiterature(res.data)
+    setLiteraturePagination(res.pagination)
+    return res
+  }
+
+  const loadHistory = async (page: number) => {
+    const res = await api.getHistory(page, PAGE_SIZE)
+    setHistory(res.data)
+    setHistoryPagination(res.pagination)
+    return res
+  }
+
+  const refreshSelectedNote = async () => {
+    if (!selectedNote || !selectedType) return
+    try {
+      const endpoint = selectedType === 'zettel' ? 'zettels' : selectedType === 'fleeting' ? 'fleeting' : 'literature'
+      const res = await fetch(`/api/${endpoint}/${encodeURIComponent(selectedNote.id)}`)
+      if (res.ok) {
+        setSelectedNote(await res.json())
+      } else {
+        setSelectedNote(null)
+        setSelectedType(null)
+      }
+    } catch {
+      setSelectedNote(null)
+      setSelectedType(null)
+    }
+  }
+
+  const reloadAfterMutation = async () => {
+    await Promise.all([
+      loadZettels(zettelPage),
+      loadFleeting(fleetingPage),
+      loadLiterature(literaturePage),
+      loadHistory(historyPage),
+      loadStaticData(),
+    ])
+    await refreshSelectedNote()
+  }
+
+  useEffect(() => {
+    loadStaticData()
+    loadZettels(1)
+    loadFleeting(1)
+    loadLiterature(1)
+    loadHistory(1)
+  }, [])
+
+  useEffect(() => { loadZettels(zettelPage) }, [zettelPage])
+  useEffect(() => { loadFleeting(fleetingPage) }, [fleetingPage])
+  useEffect(() => { loadLiterature(literaturePage) }, [literaturePage])
+  useEffect(() => { loadHistory(historyPage) }, [historyPage])
 
   const handleSelectNote = (note: Zettel | FleetingNote | LiteratureNote, type: NoteType) => {
     setSelectedNote(note)
@@ -274,7 +354,7 @@ export default function App() {
     else await api.deleteLiterature(selectedNote.id)
 
     setSelectedNote(null)
-    await loadData()
+    await reloadAfterMutation()
   }
 
   const getOutgoingLinks = (zettelId: string) => links.filter(l => l.sourceId === zettelId)
@@ -302,9 +382,9 @@ export default function App() {
     {
       label: 'Notes',
       items: [
-        { id: 'zettels', label: 'Zettels', icon: FileText, count: zettels.length },
-        { id: 'fleeting', label: 'Fleeting', icon: Lightbulb, count: fleeting.length },
-        { id: 'literature', label: 'Literature', icon: BookOpen, count: literature.length },
+        { id: 'zettels', label: 'Zettels', icon: FileText, count: zettelPagination?.total ?? 0 },
+        { id: 'fleeting', label: 'Fleeting', icon: Lightbulb, count: fleetingPagination?.total ?? 0 },
+        { id: 'literature', label: 'Literature', icon: BookOpen, count: literaturePagination?.total ?? 0 },
       ]
     },
     {
@@ -441,11 +521,11 @@ export default function App() {
                 onDelete={async (name) => {
                   if (!confirm(`Delete index "${name}"?`)) return
                   await api.deleteIndex(name)
-                  await loadData()
+                  await reloadAfterMutation()
                 }}
                 onRemoveEntry={async (indexName, zettelId) => {
                   await api.removeFromIndex(indexName, zettelId)
-                  await loadData()
+                  await reloadAfterMutation()
                 }}
                 onAddEntry={() => setAddToIndexDialogOpen(true)}
               />
@@ -456,21 +536,52 @@ export default function App() {
                 literature={literature}
                 onDelete={async (zettelId, literatureId) => {
                   await api.deleteReference(zettelId, literatureId)
-                  await loadData()
+                  await reloadAfterMutation()
                 }}
                 onSelectZettel={(z) => handleSelectNote(z, 'zettel')}
                 onSelectLiterature={(l) => handleSelectNote(l, 'literature')}
               />
             ) : view === 'history' ? (
-              <HistoryView history={history} />
+              <>
+                <HistoryView history={history} />
+                <PaginationControls
+                  pagination={historyPagination}
+                  currentPage={historyPage}
+                  onPageChange={setHistoryPage}
+                />
+              </>
             ) : (
-              <NoteList
-                notes={filteredNotes()}
-                type={view === 'zettels' ? 'zettel' : view as NoteType}
-                onSelect={handleSelectNote}
-                selectedId={selectedNote?.id}
-                viewMode={viewMode}
-              />
+              <>
+                <NoteList
+                  notes={filteredNotes()}
+                  type={view === 'zettels' ? 'zettel' : view as NoteType}
+                  onSelect={handleSelectNote}
+                  selectedId={selectedNote?.id}
+                  viewMode={viewMode}
+                  offset={(
+                    view === 'zettels' ? (zettelPage - 1) :
+                    view === 'fleeting' ? (fleetingPage - 1) :
+                    (literaturePage - 1)
+                  ) * PAGE_SIZE}
+                />
+                <PaginationControls
+                  pagination={
+                    view === 'zettels' ? zettelPagination :
+                    view === 'fleeting' ? fleetingPagination :
+                    literaturePagination
+                  }
+                  currentPage={
+                    view === 'zettels' ? zettelPage :
+                    view === 'fleeting' ? fleetingPage :
+                    literaturePage
+                  }
+                  onPageChange={(page) => {
+                    if (view === 'zettels') setZettelPage(page)
+                    else if (view === 'fleeting') setFleetingPage(page)
+                    else setLiteraturePage(page)
+                  }}
+                />
+              </>
             )}
           </div>
 
@@ -488,7 +599,7 @@ export default function App() {
               onAddLink={() => setLinkDialogOpen(true)}
               onDeleteLink={async (targetId) => {
                 await api.deleteLink(selectedNote.id, targetId)
-                await loadData()
+                await reloadAfterMutation()
               }}
               onSelectZettel={(z) => handleSelectNote(z, 'zettel')}
               onPromote={selectedType === 'fleeting' ? () => setPromoteDialogOpen(true) : undefined}
@@ -509,7 +620,7 @@ export default function App() {
           else if (createType === 'fleeting') await api.createFleeting(data as { title: string; content: string })
           else await api.createLiterature(data as { id: string; title: string; content: string; source: string })
           setCreateDialogOpen(false)
-          await loadData()
+          await reloadAfterMutation()
         }}
         onSuggestId={api.suggestNextId}
       />
@@ -526,7 +637,7 @@ export default function App() {
             else if (selectedType === 'fleeting') await api.updateFleeting(selectedNote.id, data as { title: string; content: string })
             else await api.updateLiterature(selectedNote.id, data as { title: string; content: string; source: string })
             setEditDialogOpen(false)
-            await loadData()
+            await reloadAfterMutation()
           }}
         />
       )}
@@ -541,7 +652,7 @@ export default function App() {
           onSave={async (targetId, reason) => {
             await api.createLink({ sourceId: selectedNote.id, targetId, reason })
             setLinkDialogOpen(false)
-            await loadData()
+            await reloadAfterMutation()
           }}
         />
       )}
@@ -553,7 +664,7 @@ export default function App() {
         onSave={async (name) => {
           await api.createIndex(name)
           setIndexDialogOpen(false)
-          await loadData()
+          await reloadAfterMutation()
         }}
       />
 
@@ -566,7 +677,7 @@ export default function App() {
         onSave={async (indexName, zettelId, label) => {
           await api.addToIndex(indexName, zettelId, label)
           setAddToIndexDialogOpen(false)
-          await loadData()
+          await reloadAfterMutation()
         }}
       />
 
@@ -579,7 +690,7 @@ export default function App() {
         onSave={async (zettelId, literatureId) => {
           await api.createReference(zettelId, literatureId)
           setRefDialogOpen(false)
-          await loadData()
+          await reloadAfterMutation()
         }}
       />
 
@@ -593,7 +704,7 @@ export default function App() {
             await api.promoteFleeting(selectedNote.id, zettelId)
             setPromoteDialogOpen(false)
             setSelectedNote(null)
-            await loadData()
+            await reloadAfterMutation()
           }}
           onSuggestId={api.suggestNextId}
         />
@@ -603,12 +714,13 @@ export default function App() {
 }
 
 // Note List
-function NoteList({ notes, type, onSelect, selectedId, viewMode }: {
+function NoteList({ notes, type, onSelect, selectedId, viewMode, offset = 0 }: {
   notes: (Zettel | FleetingNote | LiteratureNote)[]
   type: NoteType
   onSelect: (note: Zettel | FleetingNote | LiteratureNote, type: NoteType) => void
   selectedId?: string
   viewMode: 'card' | 'list'
+  offset?: number
 }) {
   if (notes.length === 0) {
     return (
@@ -642,7 +754,7 @@ function NoteList({ notes, type, onSelect, selectedId, viewMode }: {
                 )}
                 onClick={() => onSelect(note, type)}
               >
-                <td className="py-2 px-3 text-muted-foreground">{index + 1}</td>
+                <td className="py-2 px-3 text-muted-foreground">{offset + index + 1}</td>
                 <td className="py-2 px-3 font-mono text-xs text-muted-foreground">{note.id}</td>
                 <td className="py-2 px-3">{note.title}</td>
                 <td className="py-2 px-3 text-muted-foreground">
@@ -1566,5 +1678,46 @@ function PromoteDialog({ open, onOpenChange, fleeting, onSave, onSuggestId }: {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  )
+}
+
+// Pagination Controls
+function PaginationControls({ pagination, currentPage, onPageChange }: {
+  pagination: PaginationInfo | null
+  currentPage: number
+  onPageChange: (page: number) => void
+}) {
+  if (!pagination || pagination.totalPages <= 1) return null
+
+  return (
+    <div className="flex items-center justify-between py-4">
+      <span className="text-sm text-muted-foreground">
+        {(currentPage - 1) * pagination.limit + 1}
+        –
+        {Math.min(currentPage * pagination.limit, pagination.total)}
+        {' '}of {pagination.total}
+      </span>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={currentPage <= 1}
+          onClick={() => onPageChange(currentPage - 1)}
+        >
+          <ArrowLeft className="w-4 h-4 mr-1" /> Prev
+        </Button>
+        <span className="text-sm">
+          {currentPage} / {pagination.totalPages}
+        </span>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={currentPage >= pagination.totalPages}
+          onClick={() => onPageChange(currentPage + 1)}
+        >
+          Next <ArrowRight className="w-4 h-4 ml-1" />
+        </Button>
+      </div>
+    </div>
   )
 }

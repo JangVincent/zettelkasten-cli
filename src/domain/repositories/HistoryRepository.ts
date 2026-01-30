@@ -10,5 +10,6 @@ export interface RecordHistoryInput {
 
 export interface HistoryRepository {
   record(input: RecordHistoryInput): HistoryEntry
-  findAll(limit?: number): HistoryEntry[]
+  findAll(limit?: number, offset?: number): HistoryEntry[]
+  count(): number
 }

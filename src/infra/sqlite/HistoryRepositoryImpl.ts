@@ -27,15 +27,17 @@ export class HistoryRepositoryImpl implements HistoryRepository {
     }
   }
 
-  findAll(limit: number = 50): HistoryEntry[] {
+  findAll(limit: number = 50, offset?: number): HistoryEntry[] {
     const db = getDb()
-    const stmt = db.prepare(`
-      SELECT * FROM history
-      ORDER BY created_at DESC
-      LIMIT ?
-    `)
+    let query = `SELECT * FROM history ORDER BY created_at DESC LIMIT ?`
+    const params: number[] = [limit]
 
-    const rows = stmt.all(limit) as {
+    if (offset) {
+      query += ` OFFSET ?`
+      params.push(offset)
+    }
+
+    const rows = db.prepare(query).all(...params) as {
       id: number
       action: string
       target_type: string
@@ -54,5 +56,11 @@ export class HistoryRepositoryImpl implements HistoryRepository {
       newValue: row.new_value,
       createdAt: new Date(row.created_at),
     }))
+  }
+
+  count(): number {
+    const db = getDb()
+    const row = db.prepare(`SELECT COUNT(*) as total FROM history`).get() as { total: number }
+    return row.total
   }
 }

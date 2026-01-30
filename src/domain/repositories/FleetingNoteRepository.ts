@@ -3,7 +3,8 @@ import type { CreateFleetingNoteInput, FleetingNote } from '../entities'
 export interface FleetingNoteRepository {
   create(input: CreateFleetingNoteInput): FleetingNote
   findById(id: string): FleetingNote | null
-  findAll(limit?: number): FleetingNote[]
+  findAll(limit?: number, offset?: number): FleetingNote[]
+  count(): number
   update(id: string, input: Partial<CreateFleetingNoteInput>): FleetingNote
   delete(id: string): void
   search(query: string, limit?: number): FleetingNote[]
