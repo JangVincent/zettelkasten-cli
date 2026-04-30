@@ -55,7 +55,7 @@ brew install zettel
 ### 셸 스크립트
 
 ```bash
-curl -fsSL https://zettel.vincentjang.dev | bash
+curl -fsSL https://raw.githubusercontent.com/JangVincent/zettelkasten-cli/main/install.sh | bash
 ```
 
 ### 요구사항
