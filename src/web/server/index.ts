@@ -27,13 +27,23 @@ export function createServer(port: number, serveStatic = true) {
   // Try multiple paths for static files:
   // 1. Environment variable override
   // 2. ZETTEL_HOME directory (curl install)
-  // 3. Relative to executable (local build)
-  // 4. Relative to source (development)
+  // 3. Homebrew installation (macOS/Linux)
+  // 4. Relative to executable (local build)
+  // 5. Relative to source (development)
   const homeDir = process.env.HOME || ''
   const zettelHome = process.env.ZETTEL_HOME || resolve(homeDir, '.zettel')
+
+  // Detect Homebrew prefix for both macOS and Linux
+  const brewPrefixes = [
+    '/opt/homebrew', // macOS Apple Silicon
+    '/usr/local', // macOS Intel / Linuxbrew default
+    '/home/linuxbrew/.linuxbrew', // Linuxbrew alternative
+  ]
+
   const possibleDistPaths = [
     process.env.ZETTEL_WEB_DIST,
     resolve(zettelHome, 'web-dist'),
+    ...brewPrefixes.map((prefix) => resolve(prefix, 'share/zettel/web-dist')),
     resolve(process.execPath, '../web-dist'),
     resolve(import.meta.dir, '../client/dist'),
   ].filter(Boolean) as string[]

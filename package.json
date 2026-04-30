@@ -1,6 +1,17 @@
 {
   "name": "zettelkasten-cli",
-  "version": "0.2.8",
+  "version": "0.2.9",
+  "description": "Terminal-based Zettelkasten knowledge management system",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JangVincent/zettelkasten-cli.git"
+  },
+  "homepage": "https://github.com/JangVincent/zettelkasten-cli#readme",
+  "bugs": {
+    "url": "https://github.com/JangVincent/zettelkasten-cli/issues"
+  },
+  "license": "MIT",
+  "author": "JangVincent",
   "module": "src/index.ts",
   "type": "module",
   "scripts": {
