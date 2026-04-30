@@ -45,6 +45,15 @@
 
 ## 설치
 
+### Homebrew (macOS/Linux 권장)
+
+```bash
+brew tap JangVincent/tap
+brew install zettel
+```
+
+### 셸 스크립트
+
 ```bash
 curl -fsSL https://zettel.vincentjang.dev | bash
 ```

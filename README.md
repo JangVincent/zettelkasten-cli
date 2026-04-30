@@ -45,6 +45,15 @@ Uses Luhmann-style alphanumeric IDs. The ID itself represents derivation relatio
 
 ## Installation
 
+### Homebrew (Recommended for macOS/Linux)
+
+```bash
+brew tap JangVincent/tap
+brew install zettel
+```
+
+### Shell Script
+
 ```bash
 curl -fsSL https://zettel.vincentjang.dev | bash
 ```
